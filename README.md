@@ -13,7 +13,7 @@
 
 `2.`  Clone this repo using provided credentials
 ```bash
-git clone ...
+git clone https://github.com/Raspy-Py/DroneSwarm.git
 ```
 
 `3.` Open the project in VS Code and click `Reopen in container` in the right bottom corner.
