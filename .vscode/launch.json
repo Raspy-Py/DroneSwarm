@@ -1,0 +1,42 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Attach",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${fileDirname}",
+            "program": "${command:cmake.launchTargetPath}",
+            "miDebuggerServerAddress": "192.168.55.1:9999",
+            "MIMode": "gdb",
+            "deploySteps": [
+                {
+                    "type": "scp",
+                    "files": "${command:cmake.launchTargetPath}",
+                    "targetDir": "/tmp",
+                    "host": "root@192.168.55.1",
+                    "debug": true
+                },
+                {
+                    "type": "ssh",
+                    "command": "gdbserver localhost:9999 /tmp/${command:cmake.launchTargetFilename}",
+                    "host": "root@192.168.55.1",
+                    "continueOn": "Listening on port"
+                }
+            ],
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "gdb-multiarch"
+        }
+    ]
+}

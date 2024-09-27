@@ -1,0 +1,13 @@
+{
+    "name": "drome-empire-container",
+    "dockerFile": "Dockerfile",
+    "runArgs": [
+        "--privileged",
+        "--network=host"
+    ],
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "workspaceMount": "source=${localWorkspaceFolder},target=/root/workdir,type=bind",
+    "workspaceFolder": "/root/workdir"
+}
