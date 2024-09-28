@@ -5,8 +5,6 @@ if [ -f /opt/vision-sdk/environment-setup ]; then
 fi
 
 # Configure toolchain
-mkdir -p /root/.local
-mkdir -p /root/.local/share
 mkdir -p /root/.local/share/CMakeTools
 
 file_path="/root/.local/share/CMakeTools/cmake-tools-kits.json"
