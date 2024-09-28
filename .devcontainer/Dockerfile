@@ -30,5 +30,10 @@ RUN apt-get install -y \
 RUN mkdir /root/workdir
 WORKDIR /root/workdir
 
+RUN echo "if [ -f /root/workdir/setup.sh ]; then \n\
+    source /root/workdir/setup.sh \n\
+fi\n\
+" >> ~/.bashrc
+
 # Command to run when the container starts
 CMD ["/bin/bash"]

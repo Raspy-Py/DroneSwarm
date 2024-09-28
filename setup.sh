@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -f /opt/vision-sdk/environment-setup ]; then
+    source /opt/vision-sdk/environment-setup
+fi
+
 # Configure toolchain
 mkdir -p /root/.local
 mkdir -p /root/.local/share

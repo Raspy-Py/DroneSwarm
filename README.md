@@ -20,27 +20,26 @@ git clone https://github.com/Raspy-Py/DroneSwarm.git
 
 `4.` Put archive with [vision SDK](https://gitlab.hard-tech.org.ua/external/mirror-vision-rv1126-buildroot/-/jobs/2141/artifacts/file/artifacts_sdk/vision-sdk.tar.gz) inside `install/` folder. DO NOT RENAME IT.
 
-`5.` Reconfigure enviroment
+`5.` Install **CMake Tools** extension in VS Code (inside the container). It will be installed internally.
+
+`6.` Reconfigure enviroment
 ```bash
 tar -xf install/vision-sdk.tar.gz -C /opt
 /opt/vision-sdk/relocate-sdk.sh
 source /opt/vision-sdk/environment-setup
 ```
-
-`6.` Run `./setup.sh` script
-
-`7.` Install **CMake Tools** extension in VS Code (inside the container). It will be installed internally.
+`7.` Run `./setup.sh` script
 
 `8.` Try building [test application](https://gitlab.hard-tech.org.ua/external/vision-rv1126-helloworld-app.git).
 
 ## Deployment
 
-`1.` Deploy to the device:
+`1.` Deploy to device:
 ```bash
 scp <path_to_bin> root@192.168.55.1:/tmp/
 ```
 
-`2.` Connect to the device via ssh:
+`2.` Connect to device via ssh:
 ```bash
 ssh root@192.168.55.1
 ```
