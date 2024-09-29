@@ -1,7 +1,14 @@
 #!/bin/bash
 
+echo "PATH: $PATH"
+echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+echo "PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
+echo "Current directory: $(pwd)"
 
-install_dir="../bin"
+script_real_path=$(realpath "$0")
+script_root_dir=$(dirname "$SCRIPT_REAL_PATH")
+
+install_dir="$script_root_dir/bin"
 
 # Default options
 clean_build=0
@@ -39,5 +46,7 @@ rm -rf $install_dir
 mkdir -p $install_dir
 mkdir -p build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=$install_dir ..
+cmake -DCMAKE_INSTALL_PREFIX=$install_dir \
+      -DCMAKE_PREFIX_PATH=/opt/vision-sdk/arm-buildroot-linux-gnueabihf/sysroot/usr \
+      ..
 make install

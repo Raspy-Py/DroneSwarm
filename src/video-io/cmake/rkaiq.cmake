@@ -16,6 +16,7 @@ find_path(RKAIQ_INCLUDE_DIR
         include
         PATH_SUFFIXES
         rkaiq)
+
 find_library(RKAIQ_LIBRARY
         rkaiq)
 find_package_handle_standard_args(RKAIQ
