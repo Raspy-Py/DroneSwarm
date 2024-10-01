@@ -76,7 +76,7 @@ int main(int argc, char** argv){
     venc_chn_attr.stVencAttr.stAttrJpege.u32ZoomVirWidth = output_width;
     venc_chn_attr.stVencAttr.stAttrJpege.u32ZoomVirHeight = output_height;
     venc_chn_attr.stVencAttr.enRotation = VENC_ROTATION_0;
-    venc_chn_attr.stVencAttr.stAttrJpege.bSupportDCF = RK_TRUE;
+    venc_chn_attr.stVencAttr.stAttrJpege.bSupportDCF = RK_FALSE;
 
     if (RK_MPI_VENC_CreateChn(VENC_CHANNEL, &venc_chn_attr) != 0){
         printf("Create Venc failed! \n");
@@ -100,14 +100,14 @@ int main(int argc, char** argv){
     stRecvParam.s32RecvPicNum = 0;
     RK_MPI_VENC_StartRecvFrame(0, &stRecvParam);
 
-    MPP_CHN_S stSrcChn;
-    stSrcChn.enModId = RK_ID_VI;
-    stSrcChn.s32ChnId = VI_CHANNEL;
-    MPP_CHN_S stDestChn;
-    stDestChn.enModId = RK_ID_VENC;
-    stDestChn.s32ChnId = VENC_CHANNEL;
-    if (RK_MPI_SYS_Bind(&stSrcChn, &stDestChn)) {
-        printf("Bind VI[0] to VENC[0]::JPEG failed!\n");
+    MPP_CHN_S src_channel;
+    src_channel.enModId = RK_ID_VI;
+    src_channel.s32ChnId = VI_CHANNEL;
+    MPP_CHN_S dst_channel;
+    dst_channel.enModId = RK_ID_VENC;
+    dst_channel.s32ChnId = VENC_CHANNEL;
+    if (RK_MPI_SYS_Bind(&src_channel, &dst_channel)) {
+        printf("Bind VI[%d] to VENC[%d]::JPEG failed!\n", VI_CHANNEL, VENC_CHANNEL);
         return -1;
     }
 
@@ -117,7 +117,7 @@ int main(int argc, char** argv){
     RK_MPI_VENC_SetJpegParam(0, &stJpegParam); // Set JPEG params once
 
     VENC_CHN_PARAM_S venc_chn_param{};
-    venc_chn_param.stCropCfg.bEnable = RK_TRUE;
+    venc_chn_param.stCropCfg.bEnable = RK_FALSE;
     // venc_chn_param.stCropCfg.stRect.s32X = (qfactor / 2) * 2;
     // venc_chn_param.stCropCfg.stRect.s32Y = (qfactor / 2) * 2;
     // venc_chn_param.stCropCfg.stRect.u32Width = ((200 + qfactor) / 2) * 2;
@@ -139,7 +139,7 @@ int main(int argc, char** argv){
     }
 
     // Unbind VI and VENC
-    RK_MPI_SYS_UnBind(&stSrcChn, &stDestChn);
+    RK_MPI_SYS_UnBind(&src_channel, &dst_channel);
 
     // Clean-up in reverse order
     RK_MPI_VENC_DestroyChn(VENC_CHANNEL);

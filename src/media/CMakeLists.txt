@@ -40,7 +40,7 @@ file(GLOB_RECURSE COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cpp)
 
 # 1. media_test
 add_executable(media_test
-        ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/media_test.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/camera/camera.cpp
         ${COMMON_SOURCES}
 )
