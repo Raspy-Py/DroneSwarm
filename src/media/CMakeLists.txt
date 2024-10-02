@@ -14,13 +14,19 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(PkgConfig)
 
-#if(USE_RKAIQ)
 find_package(RkAiq REQUIRED)
-include_directories(${RKAIQ_INCLUDE_DIRS})
 add_definitions(-DRKAIQ)
-#endif()
 
 find_package(EasyMedia REQUIRED)
+
+##################################################
+# LIBS
+##################################################
+
+# librtsp
+set(RTSP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/librtsp)
+set(RTSP_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/librtsp/librtsp.a)
+
 
 ##################################################
 # BUILD
@@ -30,6 +36,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 
 include_directories(
+        ${RTSP_INCLUDE_DIR}
         ${RKAIQ_INCLUDE_DIRS}
         ${EASYMEDIA_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -61,11 +68,24 @@ target_link_libraries(video_capture
         pthread
 )
 
+# 3. video_stream
+add_executable(video_stream
+        ${CMAKE_CURRENT_SOURCE_DIR}/vi_venc_h264.cpp
+        ${COMMON_SOURCES}
+)
+target_link_libraries(video_stream
+        ${EASYMEDIA_LIBRARY}
+        ${RKAIQ_LIBRARY}
+        ${RTSP_LIBRARY}
+        pthread
+)
+
+
 ##################################################
 # INSTALL
 ##################################################
 
 install(
-        TARGETS media_test video_capture
+        TARGETS media_test video_capture video_stream
         DESTINATION ${CMAKE_INSTALL_PREFIX}
 )

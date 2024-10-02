@@ -13,14 +13,19 @@
 #include <easymedia/rkmedia_api.h>
 #include <easymedia/rkmedia_vdec.h>
 
+#include <rtsp_demo.h>
+
 
 const char* DEVICE_NAME = "rkispp_scale0";
 const char* IQ_FILE_DIR = "/etc/iqfiles";
-static bool quit = false;
 
 RK_S32 VI_CHANNEL = 0;
 RK_S32 VENC_CHANNEL = 0;
 RK_S32 CAMERA_ID = 0;
+
+rtsp_demo_handle g_rtsplive = NULL;
+static rtsp_session_handle g_rtsp_session;
+static bool quit = false;
 
 // Video encoder callback
 void venc_callback(MEDIA_BUFFER mb);
@@ -30,13 +35,12 @@ static void sigterm_handler(int sig);
 int main(int argc, char** argv){
     RK_U32 input_width = 1920;
     RK_U32 input_height = 1080;
-    RK_U32 output_width = 720;
-    RK_U32 output_height = 480;
     IMAGE_TYPE_E input_pix_fmt = IMAGE_TYPE_NV12;
     RK_U32 input_buf_cnt = 3;
     RK_U32 input_frame_rate = 30;
     RK_BOOL fec_enable = RK_FALSE;
     rk_aiq_working_mode_t hdr_mode = RK_AIQ_WORKING_MODE_NORMAL;
+    CODEC_TYPE_E codec_type = RK_CODEC_TYPE_H264;
 
     RK_MPI_SYS_Init();
 
@@ -44,6 +48,12 @@ int main(int argc, char** argv){
     SAMPLE_COMM_ISP_Init(CAMERA_ID, hdr_mode, fec_enable, IQ_FILE_DIR);
     SAMPLE_COMM_ISP_Run(CAMERA_ID);
     SAMPLE_COMM_ISP_SetFrameRate(CAMERA_ID, input_frame_rate);
+
+    // Initialize RTSP server
+    g_rtsplive = create_rtsp_demo(554);
+    g_rtsp_session = rtsp_new_session(g_rtsplive, "/live/main_stream");
+    rtsp_set_video(g_rtsp_session, RTSP_CODEC_ID_VIDEO_H264, NULL, 0);
+
 
     // Create a video input channel
     VI_CHN_ATTR_S vi_chn_attr;
@@ -65,18 +75,22 @@ int main(int argc, char** argv){
 
     // Create a video encoder
     VENC_CHN_ATTR_S venc_chn_attr{};
-    venc_chn_attr.stVencAttr.enType = RK_CODEC_TYPE_JPEG;
     venc_chn_attr.stVencAttr.imageType = input_pix_fmt;
     venc_chn_attr.stVencAttr.u32PicWidth = input_width;
     venc_chn_attr.stVencAttr.u32PicHeight = input_height;
     venc_chn_attr.stVencAttr.u32VirWidth = input_width;
     venc_chn_attr.stVencAttr.u32VirHeight = input_height;
-    venc_chn_attr.stVencAttr.stAttrJpege.u32ZoomWidth = output_width;
-    venc_chn_attr.stVencAttr.stAttrJpege.u32ZoomHeight = output_height;
-    venc_chn_attr.stVencAttr.stAttrJpege.u32ZoomVirWidth = output_width;
-    venc_chn_attr.stVencAttr.stAttrJpege.u32ZoomVirHeight = output_height;
-    venc_chn_attr.stVencAttr.enRotation = VENC_ROTATION_0;
-    venc_chn_attr.stVencAttr.stAttrJpege.bSupportDCF = RK_FALSE;
+
+    venc_chn_attr.stVencAttr.enType = codec_type;
+    venc_chn_attr.stRcAttr.enRcMode = VENC_RC_MODE_H264CBR;
+    venc_chn_attr.stRcAttr.stH264Cbr.u32Gop = 30;
+    venc_chn_attr.stRcAttr.stH264Cbr.u32BitRate = input_width * input_height;
+    // frame rate: in 30/1, out 30/1.
+    venc_chn_attr.stRcAttr.stH264Cbr.fr32DstFrameRateDen = 1;
+    venc_chn_attr.stRcAttr.stH264Cbr.fr32DstFrameRateNum = 30;
+    venc_chn_attr.stRcAttr.stH264Cbr.u32SrcFrameRateDen = 1;
+    venc_chn_attr.stRcAttr.stH264Cbr.u32SrcFrameRateNum = 30;
+    venc_chn_attr.stVencAttr.u32Profile = 77;
 
     if (RK_MPI_VENC_CreateChn(VENC_CHANNEL, &venc_chn_attr) != 0){
         printf("Create Venc failed! \n");
@@ -92,45 +106,18 @@ int main(int argc, char** argv){
         return -1;
     }
     
-    
-    // The encoder defaults to continuously receiving frames from the previous
-    // stage. Before performing the bind operation, set s32RecvPicNum to 0 to
-    // make the encoding enter the pause state.
-    VENC_RECV_PIC_PARAM_S stRecvParam;
-    stRecvParam.s32RecvPicNum = 0;
-    RK_MPI_VENC_StartRecvFrame(0, &stRecvParam);
 
-    MPP_CHN_S src_channel;
+    MPP_CHN_S src_channel{};
     src_channel.enModId = RK_ID_VI;
     src_channel.s32ChnId = VI_CHANNEL;
-    MPP_CHN_S dst_channel;
+    MPP_CHN_S dst_channel{};
     dst_channel.enModId = RK_ID_VENC;
     dst_channel.s32ChnId = VENC_CHANNEL;
     if (RK_MPI_SYS_Bind(&src_channel, &dst_channel)) {
-        printf("Bind VI[%d] to VENC[%d]::JPEG failed!\n", VI_CHANNEL, VENC_CHANNEL);
+        printf("Bind VI[%d] to VENC[%d]::H264 failed!\n", VI_CHANNEL, VENC_CHANNEL);
         return -1;
     }
 
-    int qfactor = 75; // Set a fixed qfactor value (or any other default value)
-    VENC_JPEG_PARAM_S jpeg_param;
-    jpeg_param.u32Qfactor = qfactor;
-    RK_MPI_VENC_SetJpegParam(0, &jpeg_param); // Set JPEG params once
-
-    VENC_CHN_PARAM_S venc_chn_param{};
-    venc_chn_param.stCropCfg.bEnable = RK_FALSE;
-    // venc_chn_param.stCropCfg.stRect.s32X = (qfactor / 2) * 2;
-    // venc_chn_param.stCropCfg.stRect.s32Y = (qfactor / 2) * 2;
-    // venc_chn_param.stCropCfg.stRect.u32Width = ((200 + qfactor) / 2) * 2;
-    // venc_chn_param.stCropCfg.stRect.u32Height = ((200 + qfactor) / 2) * 2;
-    venc_chn_param.stCropCfg.stRect.s32X = 0;
-    venc_chn_param.stCropCfg.stRect.s32Y = 0;
-    venc_chn_param.stCropCfg.stRect.u32Width = output_width;
-    venc_chn_param.stCropCfg.stRect.u32Height = output_height;
-    RK_MPI_VENC_SetChnParam(VENC_CHANNEL, &venc_chn_param); // Set channel params once
-
-    // Start receiving frames continuously
-    stRecvParam.s32RecvPicNum = -1;  // Set to -1 for continuous reception
-    RK_MPI_VENC_StartRecvFrame(VENC_CHANNEL, &stRecvParam);
 
     // Now it will continuously receive frames without user interaction
     signal(SIGINT, sigterm_handler);
@@ -150,24 +137,23 @@ int main(int argc, char** argv){
 }
 
 void venc_callback(MEDIA_BUFFER mb) {
-  static RK_U32 jpeg_id = 0;
-//   printf("Get JPEG packet[%d]:ptr:%p, fd:%d, size:%zu, mode:%d, channel:%d, "
-//          "timestamp:%lld\n",
-//          jpeg_id, RK_MPI_MB_GetPtr(mb), RK_MPI_MB_GetFD(mb),
-//          RK_MPI_MB_GetSize(mb), RK_MPI_MB_GetModeID(mb),
-//          RK_MPI_MB_GetChannelID(mb), RK_MPI_MB_GetTimestamp(mb));
+  static RK_S32 packet_cnt = 0;
+  if (quit)
+    return;
 
-  char jpeg_path[128];
-  sprintf(jpeg_path, "/tmp/video/frame%d.jpeg", jpeg_id);
-  printf("Save JPEG packet[%d] to %s\n", jpeg_id, jpeg_path);
-  FILE *file = fopen(jpeg_path, "w");
-  if (file) {
-    fwrite(RK_MPI_MB_GetPtr(mb), 1, RK_MPI_MB_GetSize(mb), file);
-    fclose(file);
+  printf("#Get packet %d, size %zu\n", packet_cnt, RK_MPI_MB_GetSize(mb));
+
+  if (g_rtsplive && g_rtsp_session) {
+    rtsp_tx_video(g_rtsp_session, 
+        reinterpret_cast<uint8_t*>(RK_MPI_MB_GetPtr(mb)), 
+        RK_MPI_MB_GetSize(mb), RK_MPI_MB_GetTimestamp(mb)
+    );
+    rtsp_do_event(g_rtsplive);
   }
 
   RK_MPI_MB_ReleaseBuffer(mb);
-  jpeg_id++;
+  packet_cnt++;
+
 }
 
 static void sigterm_handler(int sig){
