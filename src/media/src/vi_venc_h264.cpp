@@ -33,8 +33,8 @@ void venc_callback(MEDIA_BUFFER mb);
 static void sigterm_handler(int sig);
 
 int main(int argc, char** argv){
-    RK_U32 input_width = 1920;
-    RK_U32 input_height = 1080;
+    RK_U32 input_width = 512;
+    RK_U32 input_height = 288;
     IMAGE_TYPE_E input_pix_fmt = IMAGE_TYPE_NV12;
     RK_U32 input_buf_cnt = 3;
     RK_U32 input_frame_rate = 30;
@@ -137,22 +137,22 @@ int main(int argc, char** argv){
 }
 
 void venc_callback(MEDIA_BUFFER mb) {
-  static RK_S32 packet_cnt = 0;
-  if (quit)
-    return;
+    static RK_S32 packet_cnt = 0;
+    if (quit)
+        return;
 
-  printf("#Get packet %d, size %zu\n", packet_cnt, RK_MPI_MB_GetSize(mb));
+    // printf("#Get packet %d, size %zu\n", packet_cnt, RK_MPI_MB_GetSize(mb));
 
-  if (g_rtsplive && g_rtsp_session) {
-    rtsp_tx_video(g_rtsp_session, 
-        reinterpret_cast<uint8_t*>(RK_MPI_MB_GetPtr(mb)), 
-        RK_MPI_MB_GetSize(mb), RK_MPI_MB_GetTimestamp(mb)
-    );
-    rtsp_do_event(g_rtsplive);
-  }
+    if (g_rtsplive && g_rtsp_session) {
+        rtsp_tx_video(g_rtsp_session, 
+            reinterpret_cast<uint8_t*>(RK_MPI_MB_GetPtr(mb)), 
+            RK_MPI_MB_GetSize(mb), RK_MPI_MB_GetTimestamp(mb)
+        );
+        rtsp_do_event(g_rtsplive);
+    }
 
-  RK_MPI_MB_ReleaseBuffer(mb);
-  packet_cnt++;
+    RK_MPI_MB_ReleaseBuffer(mb);
+    packet_cnt++;
 
 }
 

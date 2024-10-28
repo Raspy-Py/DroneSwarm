@@ -4,8 +4,6 @@
 
 static bool quit = false;
 
-const RK_S32 Camera::m_vi_channel = 0;
-
 static void *GetMediaBuffer(void *arg) {
   (void*)arg;
   const char *save_path = "/tmp/vi.yuv";
@@ -66,8 +64,17 @@ static void *GetMediaBuffer(void *arg) {
 
 
 
-Camera::Camera() 
-    : m_camera_id(0) {
+Camera::Camera(RK_S32 camera_id, RK_S32 vi_channel, RK_U32 width, RK_U32 height) 
+    : m_camera_id(camera_id), m_vi_channel(vi_channel), m_width(width), m_height(height) {
+    
+}
+
+Camera::~Camera() {
+    RK_MPI_VI_DisableChn(m_camera_id, m_vi_channel);
+    SAMPLE_COMM_ISP_Stop(m_camera_id);
+}
+
+void Camera::Open(RK_S32 camera_id, RK_S32 vi_channel, RK_U32 width, RK_U32 height){
     int ret = 0;
     RK_U32 u32Width = 1920;
     RK_U32 u32Height = 1080;
@@ -113,9 +120,4 @@ Camera::Camera()
     while (!quit) {
         usleep(1000);
     }
-}
-
-Camera::~Camera() {
-    RK_MPI_VI_DisableChn(m_camera_id, m_vi_channel);
-    SAMPLE_COMM_ISP_Stop(m_camera_id);
 }
