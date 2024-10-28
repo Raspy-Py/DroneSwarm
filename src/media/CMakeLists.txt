@@ -19,13 +19,14 @@ add_definitions(-DRKAIQ)
 
 find_package(EasyMedia REQUIRED)
 
+
 ##################################################
 # LIBS
 ##################################################
 
 # librtsp
-set(RTSP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/librtsp)
-set(RTSP_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/librtsp/librtsp.a)
+set(RTSP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/rtsp/include)
+set(RTSP_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/rtsp/lib/librtsp.a)
 
 
 ##################################################
@@ -39,16 +40,16 @@ include_directories(
         ${RTSP_INCLUDE_DIR}
         ${RKAIQ_INCLUDE_DIRS}
         ${EASYMEDIA_INCLUDE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
 )
 
-file(GLOB_RECURSE COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cpp)
+file(GLOB_RECURSE COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp)
 
 # 1. media_test
 add_executable(media_test
-        ${CMAKE_CURRENT_SOURCE_DIR}/media_test.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/camera/camera.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/media_test.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/camera.cpp
         ${COMMON_SOURCES}
 )
 target_link_libraries(media_test
@@ -59,7 +60,7 @@ target_link_libraries(media_test
 
 # 2. video_capture 
 add_executable(video_capture
-        ${CMAKE_CURRENT_SOURCE_DIR}/vi_venc_jpeg.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_venc_jpeg.cpp
         ${COMMON_SOURCES}
 )
 target_link_libraries(video_capture
@@ -70,7 +71,7 @@ target_link_libraries(video_capture
 
 # 3. video_stream
 add_executable(video_stream
-        ${CMAKE_CURRENT_SOURCE_DIR}/vi_venc_h264.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_venc_h264.cpp
         ${COMMON_SOURCES}
 )
 target_link_libraries(video_stream
@@ -89,3 +90,4 @@ install(
         TARGETS media_test video_capture video_stream
         DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
+
