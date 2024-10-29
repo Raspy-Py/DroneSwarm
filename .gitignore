@@ -10,7 +10,7 @@
 *.pch
 
 # Compiled Dynamic libraries
-*.so
+#*.so
 *.dylib
 *.dll
 
@@ -21,7 +21,8 @@
 # Compiled Static libraries
 *.lai
 *.la
-*.a
+# We actually want static libs to be saved in reposiptory
+#*.a
 *.lib
 
 # Executables
