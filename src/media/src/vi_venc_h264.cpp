@@ -35,6 +35,11 @@ static void sigterm_handler(int sig);
 int main(int argc, char** argv){
     RK_U32 input_width = 512;
     RK_U32 input_height = 288;
+    if (argc > 1)
+        input_width = atoi(argv[1]);
+    if (argc > 2)
+        input_height = atoi(argv[2]);
+
     IMAGE_TYPE_E input_pix_fmt = IMAGE_TYPE_NV12;
     RK_U32 input_buf_cnt = 3;
     RK_U32 input_frame_rate = 30;
