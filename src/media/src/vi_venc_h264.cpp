@@ -18,7 +18,9 @@
 
 const char* DEVICE_NAME = "rkispp_scale0";
 const char* IQ_FILE_DIR = "/etc/iqfiles";
+const char* STREAM_ADDRESS = "/live/main_stream";
 
+RK_U32 STREAM_PORT = 554;
 RK_S32 VI_CHANNEL = 0;
 RK_S32 VENC_CHANNEL = 0;
 RK_S32 CAMERA_ID = 0;
@@ -35,6 +37,7 @@ static void sigterm_handler(int sig);
 int main(int argc, char** argv){
     RK_U32 input_width = 512;
     RK_U32 input_height = 288;
+
     if (argc > 1)
         input_width = atoi(argv[1]);
     if (argc > 2)
@@ -55,8 +58,8 @@ int main(int argc, char** argv){
     SAMPLE_COMM_ISP_SetFrameRate(CAMERA_ID, input_frame_rate);
 
     // Initialize RTSP server
-    g_rtsplive = create_rtsp_demo(554);
-    g_rtsp_session = rtsp_new_session(g_rtsplive, "/live/main_stream");
+    g_rtsplive = create_rtsp_demo(STREAM_PORT);
+    g_rtsp_session = rtsp_new_session(g_rtsplive, STREAM_ADDRESS);
     rtsp_set_video(g_rtsp_session, RTSP_CODEC_ID_VIDEO_H264, NULL, 0);
 
 
@@ -102,7 +105,7 @@ int main(int argc, char** argv){
         return -1;
     }
 
-    // Set video encoder callback
+    // Set video e0ncoder callback
     MPP_CHN_S stEncChn;
     stEncChn.enModId = RK_ID_VENC;
     stEncChn.s32ChnId = VENC_CHANNEL;

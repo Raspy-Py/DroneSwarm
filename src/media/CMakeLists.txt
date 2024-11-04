@@ -7,6 +7,7 @@ endif()
 
 project(media C CXX)
 
+
 ##################################################
 # PACKAGES
 ##################################################
@@ -46,19 +47,7 @@ include_directories(
 
 file(GLOB_RECURSE COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp)
 
-# 1. media_test
-add_executable(media_test
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/media_test.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/camera.cpp
-        ${COMMON_SOURCES}
-)
-target_link_libraries(media_test
-        ${EASYMEDIA_LIBRARY}
-        ${RKAIQ_LIBRARY}
-        pthread
-)
-
-# 2. video_capture 
+# 1. video_capture 
 add_executable(video_capture
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_venc_jpeg.cpp
         ${COMMON_SOURCES}
@@ -69,7 +58,7 @@ target_link_libraries(video_capture
         pthread
 )
 
-# 3. video_stream
+# 2. video_stream
 add_executable(video_stream
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_venc_h264.cpp
         ${COMMON_SOURCES}
@@ -87,7 +76,6 @@ target_link_libraries(video_stream
 ##################################################
 
 install(
-        TARGETS media_test video_capture video_stream
+        TARGETS video_capture video_stream
         DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
-

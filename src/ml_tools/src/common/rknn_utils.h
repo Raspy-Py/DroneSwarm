@@ -19,6 +19,21 @@
 #ifndef ML_TOOLS_COMMON_RKNN_UTILS_H
 #define ML_TOOLS_COMMON_RKNN_UTILS_H
 
+#include <fstream>
+#include <iostream>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <vector>
+#include <rknn_api.h>
+
+#include <stb_image.h>
+#include <stb_image_resize.h>
+
+
+// For more convenient error handling
+
 #define RKNN_CHECK_BASE(expression, file, line) \
     do {                                        \
         int ret = (expression);                 \
@@ -42,19 +57,8 @@
     } while(0)
 #define RKNN_FATAL(expression) RKNN_FATAL_BASE(expression, __FILE__, __LINE__)
 
-#include <fstream>
-#include <iostream>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
-#include <vector>
-#include <rknn_api.h>
 
-#include <stb_image.h>
-#include <stb_image_resize.h>
-
-// Quantization utils from Rockchip.
+// Quantization utils from Rockchip
 
 void f32_to_f16(uint16_t *f16, float *f32, int num);
 

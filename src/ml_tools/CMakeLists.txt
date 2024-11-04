@@ -19,6 +19,8 @@ find_package(PkgConfig)
 # LIBS
 ##################################################
 
+# eigen 
+set(EIGEN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/eigen/include)
 
 # rknn api
 set(RKNN_API_LIBRARY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/rknn_api)
@@ -39,6 +41,7 @@ set(CMAKE_CXX_STANDARD 11)
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${EIGEN_INCLUDE_DIR}
         ${RKNN_API_INCLUDE_DIR}
         ${STB_INCLUDE_DIR}
 )
@@ -68,11 +71,17 @@ target_link_libraries(alike_infer_test
         dl
 )
 
+# 3. eigen_test
+add_executable(eigen_test
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/eigen_test.cpp
+)
+
+
 ##################################################
 # INSTALL
 ##################################################
 
 install(
-        TARGETS rknn_api_version alike_infer_test
+        TARGETS rknn_api_version alike_infer_test eigen_test
         DESTINATION ${CMAKE_INSTALL_PREFIX}
 )

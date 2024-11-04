@@ -36,8 +36,7 @@
 // SSD
 static char *g_box_priors = "/oem/usr/share/rknn_model/box_priors.txt";
 static char *g_labels_list = "/oem/usr/share/rknn_model/coco_labels_list.txt";
-static char *g_ssd_path =
-    "/oem/usr/share/rknn_model/ssd_inception_v2_rv1109_rv1126.rknn";
+static char *g_ssd_path = "/oem/usr/share/rknn_model/ssd_inception_v2_rv1109_rv1126.rknn";
 
 #define OBJ_NAME_MAX_SIZE 16
 #define OBJ_NUMB_MAX_SIZE 64
