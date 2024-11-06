@@ -76,12 +76,15 @@ add_executable(eigen_test
         ${CMAKE_CURRENT_SOURCE_DIR}/src/eigen_test.cpp
 )
 
+add_executable(led_detection
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/led_detection.cpp
+)
 
 ##################################################
 # INSTALL
 ##################################################
 
 install(
-        TARGETS rknn_api_version alike_infer_test eigen_test
+        TARGETS rknn_api_version alike_infer_test eigen_test led_detection
         DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
