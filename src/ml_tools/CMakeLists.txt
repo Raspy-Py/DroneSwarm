@@ -74,10 +74,6 @@ add_executable(eigen_test
         ${CMAKE_CURRENT_SOURCE_DIR}/src/eigen_test.cpp
 )
 
-<<<<<<< HEAD
-add_executable(led_detection
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/led_detection.cpp
-=======
 add_library(detection STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/led_detection.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/led_detection.hpp)
 
 set_target_properties(detection PROPERTIES LINKER_LANGUAGE CXX)
@@ -90,7 +86,6 @@ target_link_libraries(led_test
     detection
     pthread
     dl
->>>>>>> 11a1329 (real time image processing script)
 )
 
 ##################################################
@@ -98,10 +93,6 @@ target_link_libraries(led_test
 ##################################################
 
 install(
-<<<<<<< HEAD
-        TARGETS rknn_api_version alike_infer_test eigen_test led_detection
-=======
         TARGETS rknn_api_version alike_infer_test eigen_test detection led_test
->>>>>>> 11a1329 (real time image processing script)
         DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
