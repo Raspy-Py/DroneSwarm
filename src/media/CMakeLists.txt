@@ -11,6 +11,7 @@ project(media C CXX)
 ##################################################
 # PACKAGES
 ##################################################
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(PkgConfig)
@@ -29,6 +30,13 @@ find_package(EasyMedia REQUIRED)
 set(RTSP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/rtsp/include)
 set(RTSP_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/rtsp/lib/librtsp.a)
 
+#libdetection
+set(LED_LIB ${CMAKE_CURRENT_SOURCE_DIR}/libs/led/lib/libdetection.a)
+set(LED_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/led/include)
+
+#eigen
+set(EIGEN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/eigen/include)
+
 
 ##################################################
 # BUILD
@@ -43,6 +51,8 @@ include_directories(
         ${EASYMEDIA_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${LED_INCLUDE_DIR}
+        ${EIGEN_INCLUDE_DIR}
 )
 
 file(GLOB_RECURSE COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp)
@@ -70,6 +80,17 @@ target_link_libraries(video_stream
         pthread
 )
 
+# 3. read_and_convert
+add_executable(read_and_convert
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_rga_bin.cpp
+        ${COMMON_SOURCES}
+)
+target_link_libraries(read_and_convert
+        ${LED_LIB}
+        ${EASYMEDIA_LIBRARY}
+        ${RKAIQ_LIBRARY}
+        pthread
+)
 
 ##################################################
 # INSTALL
