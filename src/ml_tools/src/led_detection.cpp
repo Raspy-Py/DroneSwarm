@@ -1,16 +1,6 @@
 #include "led_detection.hpp"
 
 void LedDetector::print_scores(const Eigen::Matrix<float, 1, Eigen::Dynamic, Eigen::RowMajor> &scores,
-<<<<<<< HEAD
-                    int width, int height, const std::string &name)
-{
-    std::cout << "\n"
-                << name << " scores matrix:" << std::endl;
-    for (int y = 0; y < height; y++)
-    {
-        for (int x = 0; x < width; x++)
-        {
-=======
                                 int width, int height, const std::string &name) {
 
     std::cout << "\n"
@@ -18,15 +8,10 @@ void LedDetector::print_scores(const Eigen::Matrix<float, 1, Eigen::Dynamic, Eig
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
->>>>>>> 11a1329 (real time image processing script)
             std::cout << std::fixed << std::setprecision(3) << scores(y * width + x) << "\t";
         }
         std::cout << std::endl;
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> 11a1329 (real time image processing script)
     Eigen::Index min_idx;
     float min_val = scores.minCoeff(&min_idx);
     int min_x = min_idx % width;
@@ -34,20 +19,12 @@ void LedDetector::print_scores(const Eigen::Matrix<float, 1, Eigen::Dynamic, Eig
     std::cout << "Minimum score: " << min_val << " at position (" << min_x << ", " << min_y << ")\n";
 }
 
-<<<<<<< HEAD
-std::vector<std::pair<float, float>> LedDetector::detect(const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &r_channel,
-                                            const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &g_channel,
-                                            const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &b_channel,
-                                            bool debug = true)
-{
-=======
 std::vector<std::pair<float, float>> LedDetector::detect(
         const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &r_channel,
         const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &g_channel,
         const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &b_channel,
         bool debug = true) {
 
->>>>>>> 11a1329 (real time image processing script)
     int height = r_channel.rows();
     int width = r_channel.cols();
 
@@ -61,12 +38,7 @@ std::vector<std::pair<float, float>> LedDetector::detect(
                                                                             r_flat.array() + b_flat.array();
     Eigen::Matrix<float, 1, Eigen::Dynamic, Eigen::RowMajor> blue_scores = -b_flat.array() +
                                                                             r_flat.array() + g_flat.array();
-<<<<<<< HEAD
-    if (debug)
-    {
-=======
     if (debug) {
->>>>>>> 11a1329 (real time image processing script)
         std::cout << "\nInput Matrices:" << std::endl;
         std::cout << "\nR channel:" << std::endl
                     << r_channel;
@@ -90,38 +62,6 @@ std::vector<std::pair<float, float>> LedDetector::detect(
     return std::vector<std::pair<float, float>>{redp, greenp, bluep};
 }
 
-<<<<<<< HEAD
-
-int main()
-{
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> R(4, 4);
-    R << 1.0f, 0.5f, 0.5f, 0.7f,
-        1.0f, 0.3f, 0.3f, 0.3f,
-        0.2f, 0.2f, 0.2f, 0.2f,
-        1.0f, 1.0f, 1.0f, 1.0f;
-
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> B(4, 4);
-    B << 1.0f, 1.0f, 1.0f, 1.0f,
-        0.1f, 0.9f, 0.9f, 0.9f,
-        0.9f, 0.9f, 0.89f, 0.9f,
-        1.0f, 1.0f, 1.0f, 1.0f;
-
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> G(4, 4);
-    G << 1.0f, 1.0f, 1.0f, 1.0f,
-        0.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 1.0f;
-
-    LedDetector detector;
-    std::vector<std::pair<float, float>> results = detector.detect(R, G, B);
-
-    std::cout << "\nFinal Results:" << std::endl;
-    std::cout << "Red LED found at: (" << results[0].first << ", " << results[0].second << ")" << std::endl;
-    std::cout << "Green LED found at: (" << results[1].first << ", " << results[1].second << ")" << std::endl;
-    std::cout << "Blue LED found at: (" << results[2].first << ", " << results[2].second << ")" << std::endl;
-    return 0;
-}
-=======
 void LedDetector::map_test(const void* imageData, int width, int height) {
         const uint8_t* data = static_cast<const uint8_t*>(imageData);
         
@@ -183,4 +123,3 @@ void LedDetector::map_test(const void* imageData, int width, int height) {
 
         return std::make_tuple(red, green, blue);
     }
->>>>>>> 11a1329 (real time image processing script)
