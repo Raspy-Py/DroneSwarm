@@ -1,6 +1,4 @@
-#ifndef LED_DETECTOR_H
-#define LED_DETECTOR_H
-
+#pragma once
 #include <Eigen/Dense>
 #include <vector>
 #include <string>
@@ -18,6 +16,9 @@ public:
                                                const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &g_channel,
                                                const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &b_channel,
                                                bool debug);
+    std::tuple<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>,
+                Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>,
+                Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> 
+                    mapImageToEigen(const void* imageData, int width, int height);
+    void map_test(const void* imageData, int width, int height);
 };
-
-#endif

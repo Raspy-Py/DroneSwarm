@@ -46,13 +46,12 @@ static bool quit = false;
 static void sigtermHandler(int sig) {
   quit = true;
 }
-
 static LedDetector ld;
 static void *GetConvertedFrame(void *arg) {
   OutputArgs *outArgs = (OutputArgs *)arg;
 
-  MEDIA_BUFFER mediaBuffer = NULL;
 
+  MEDIA_BUFFER mediaBuffer = NULL;
   while (!quit) {
     mediaBuffer = RK_MPI_SYS_GetMediaBuffer(RK_ID_RGA, 0, -1);
     if (!mediaBuffer) break;
@@ -104,12 +103,10 @@ int main(int argc, char *argv[]) {
   vi_chn_attr.enPixFmt = input_pix_fmt;
   vi_chn_attr.enWorkMode = VI_WORK_MODE_NORMAL;
   vi_chn_attr.enBufType = VI_CHN_BUF_TYPE_MMAP;
-
   if(RK_MPI_VI_SetChnAttr(CAMERA_ID, VI_CHANNEL, &vi_chn_attr) != 0){
       printf("Create VI[0] failed! \n");
       return -1;
   }
-  
   if(RK_MPI_VI_EnableChn(CAMERA_ID, VI_CHANNEL)){
       printf("Enable VI[0] failed!\n");
       return -1;
