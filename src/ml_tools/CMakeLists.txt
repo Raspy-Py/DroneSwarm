@@ -10,6 +10,7 @@ project(media C CXX)
 ##################################################
 # PACKAGES
 ##################################################
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(PkgConfig)
@@ -76,12 +77,24 @@ add_executable(eigen_test
         ${CMAKE_CURRENT_SOURCE_DIR}/src/eigen_test.cpp
 )
 
+# 4. detect_keypoints
+add_executable(detect_keypoints
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/detect_keypoints.cpp
+        ${COMMON_SOURCES}
+)
+
+target_link_libraries(detect_keypoints
+        ${RKNN_API_LIBRARY}
+        pthread
+        dl
+)
+
 
 ##################################################
 # INSTALL
 ##################################################
 
 install(
-        TARGETS rknn_api_version alike_infer_test eigen_test
+        TARGETS rknn_api_version alike_infer_test eigen_test detect_keypoints
         DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
