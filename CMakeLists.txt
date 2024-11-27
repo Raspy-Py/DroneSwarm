@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 2.8...3.13)
 
-project(vision-full C CXX)
+project(droneswarm C CXX)
 
-# Add your modules here
-add_subdirectory(src/media)
-add_subdirectory(src/ml_tools)
+# Dependencies
+include(FetchContent)
+include(externals/asio.cmake)
+include(externals/msp.cmake)
+# include(externals/eigen.cmake)
 
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 11)
+# Main drone swarm library
+add_subdirectory(src/telemetry)
+add_subdirectory(src/network)
+add_subdirectory(src/control)
