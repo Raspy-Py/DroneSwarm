@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ML_TOOLS_COMMMON_RKMEDIA_COMMON
-#define ML_TOOLS_COMMMON_RKMEDIA_COMMON
+#ifndef __RKMEDIA_COMMON_
+#define __RKMEDIA_COMMON_
 
 #ifdef __cplusplus
 extern "C" {
@@ -374,4 +374,4 @@ typedef struct rkLOG_LEVEL_CONF_S {
 #ifdef __cplusplus
 }
 #endif
-#endif // ML_TOOLS_COMMMON_RKMEDIA_COMMON
+#endif // #ifndef __RKMEDIA_COMMON_

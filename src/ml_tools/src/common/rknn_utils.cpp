@@ -1,13 +1,15 @@
 #include "rknn_utils.h"
-#include "rknn_api.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include <stb_image_resize.h>
 
+#include <rknn_api.h>
 #include <string>
 #include <unordered_map>
+
+namespace utils {
 
 std::string get_rknn_err_str(int errorCode) {
     static const std::unordered_map<int, std::string> errorMap = {
@@ -532,3 +534,5 @@ void print_tensor(rknn_tensor_attr *attr)
 std::chrono::high_resolution_clock::time_point now() {
     return std::chrono::high_resolution_clock::now();
 }
+
+} // namespace utils
