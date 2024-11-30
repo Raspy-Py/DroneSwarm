@@ -1,6 +1,8 @@
 import cv2
 import torch
 from torchvision.transforms import ToTensor
+FOCAL_LEN = 1
+REAL_DIST = 1
 class LedDetector(torch.nn.Module):
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         X = X.squeeze(0)
@@ -16,9 +18,7 @@ class LedDetector(torch.nn.Module):
 
         return torch.stack([red_coordintates, green_coordintates, blue_coordintates])
 
-    
     def get_coordinates(self, X: torch.Tensor) -> torch.Tensor:
-
         y = X // self.width
         x = X - (y * self.width)
         coordinates = torch.stack([x, y])
@@ -42,9 +42,10 @@ if __name__=='__main__':
         cv2.circle(frame, tuple(led_coords[0].numpy()), radius=4, color=(0, 0, 255), thickness=4)
         cv2.circle(frame, tuple(led_coords[1].numpy()), radius=4, color=(0, 255, 0), thickness=5)
         cv2.circle(frame, tuple(led_coords[2].numpy()), radius=4, color=(255, 0, 0), thickness=4)
+        distance = abs(led_coords[0][0] - led_coords[0][1]) * FOCAL_LEN / REAL_DIST
+        cv2.putText(frame,  f"Distance: {distance:.2f}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         cv2.imshow('Webcam Stream', frame)
-
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-    cap.release()    
+    cap.release()
     cv2.destroyAllWindows()
