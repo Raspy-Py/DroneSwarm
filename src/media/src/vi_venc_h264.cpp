@@ -35,8 +35,8 @@ void venc_callback(MEDIA_BUFFER mb);
 static void sigterm_handler(int sig);
 
 int main(int argc, char** argv){
-    RK_U32 input_width = 512;
-    RK_U32 input_height = 288;
+    RK_U32 input_width = 1920;
+    RK_U32 input_height = 1080;
 
     if (argc > 1)
         input_width = atoi(argv[1]);
@@ -105,7 +105,7 @@ int main(int argc, char** argv){
         return -1;
     }
 
-    // Set video e0ncoder callback
+    // Set video encoder callback
     MPP_CHN_S stEncChn;
     stEncChn.enModId = RK_ID_VENC;
     stEncChn.s32ChnId = VENC_CHANNEL;

@@ -70,12 +70,22 @@ target_link_libraries(video_stream
         pthread
 )
 
+# 3. read_and_convert
+add_executable(read_and_convert
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_rga_bin.cpp
+        ${COMMON_SOURCES}
+)
+target_link_libraries(read_and_convert
+        ${EASYMEDIA_LIBRARY}
+        ${RKAIQ_LIBRARY}
+        pthread
+)
 
 ##################################################
 # INSTALL
 ##################################################
 
 install(
-        TARGETS video_capture video_stream
+        TARGETS video_capture video_stream read_and_convert
         DESTINATION ${CMAKE_INSTALL_PREFIX}
 )

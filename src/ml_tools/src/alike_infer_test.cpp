@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     const char *img_path = argv[2];
 
     // Load RKNN Model
-    model = load_model(model_path, &model_len);
+    model = utils::load_model(model_path, &model_len);
     RKNN_FATAL(rknn_init(&ctx, model, model_len, 0));
 
     // Get Model Input Output Info
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     {
         input_attrs[i].index = i;
         RKNN_FATAL(rknn_query(ctx, RKNN_QUERY_INPUT_ATTR, input_attrs.data() + i, sizeof(rknn_tensor_attr)));
-        print_tensor(input_attrs.data() + i);
+        utils::print_tensor(input_attrs.data() + i);
     }
 
     printf("output tensors:\n");
@@ -61,12 +61,12 @@ int main(int argc, char **argv)
     {
         output_attrs[i].index = i;
         RKNN_FATAL(rknn_query(ctx, RKNN_QUERY_OUTPUT_ATTR, output_attrs.data() + i, sizeof(rknn_tensor_attr)));
-        print_tensor(output_attrs.data() + i);
+        utils::print_tensor(output_attrs.data() + i);
     }
 
     // Load image
     unsigned char *img_data = NULL;
-    img_data = load_image(img_path, input_attrs.data());
+    img_data = utils::load_image(img_path, input_attrs.data());
     if (!img_data)
     {
         printf("[ERROR] Load image failed!\n");
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 
     // process input when pass_through = 1
     void *in_data = NULL;
-    process_input(img_data, &in_data, input_attrs.data(), mean, scale, isReorder210, isNCHW);
+    utils::process_input(img_data, &in_data, input_attrs.data(), mean, scale, isReorder210, isNCHW);
 
     // Set Input Data
     rknn_input inputs[1]{};

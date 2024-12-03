@@ -1,10 +1,41 @@
 #include "rknn_utils.h"
-#include "rknn_api.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include <stb_image_resize.h>
+
+#include <rknn_api.h>
+#include <string>
+#include <unordered_map>
+
+namespace utils {
+
+std::string get_rknn_err_str(int errorCode) {
+    static const std::unordered_map<int, std::string> errorMap = {
+        {0, "RKNN_SUCC: execute succeed."},
+        {-1, "RKNN_ERR_FAIL: execute failed."},
+        {-2, "RKNN_ERR_TIMEOUT: execute timeout."},
+        {-3, "RKNN_ERR_DEVICE_UNAVAILABLE: device is unavailable."},
+        {-4, "RKNN_ERR_MALLOC_FAIL: memory malloc fail."},
+        {-5, "RKNN_ERR_PARAM_INVALID: parameter is invalid."},
+        {-6, "RKNN_ERR_MODEL_INVALID: model is invalid."},
+        {-7, "RKNN_ERR_CTX_INVALID: context is invalid."},
+        {-8, "RKNN_ERR_INPUT_INVALID: input is invalid."},
+        {-9, "RKNN_ERR_OUTPUT_INVALID: output is invalid."},
+        {-10, "RKNN_ERR_DEVICE_UNMATCH: the device is unmatch, please update rknn sdk and npu driver/firmware."},
+        {-11, "RKNN_ERR_INCOMPATILE_PRE_COMPILE_MODEL: This RKNN model use pre_compile mode, but not compatible with current driver."},
+        {-12, "RKNN_ERR_INCOMPATILE_OPTIMIZATION_LEVEL_VERSION: This RKNN model set optimization level, but not compatible with current driver."},
+        {-13, "RKNN_ERR_TARGET_PLATFORM_UNMATCH: This RKNN model set target platform, but not compatible with current platform."},
+        {-14, "RKNN_ERR_NON_PRE_COMPILED_MODEL_ON_MINI_DRIVER: This RKNN model is not a pre-compiled model, but the npu driver is mini driver."}
+    };
+
+    auto it = errorMap.find(errorCode);
+    if (it != errorMap.end()) {
+        return it->second;
+    }
+    return "Unknown error code.";
+}
 
 inline static int32_t __clip(float val, float min, float max)
 {
@@ -255,6 +286,89 @@ unsigned char *load_image(const char *image_path, rknn_tensor_attr *input_attr)
     return image_data;
 }
 
+
+int load_image_to_buffer(const char *image_path, rknn_tensor_attr *input_attr, uint8_t *output_buffer)
+{
+    if (!output_buffer || !input_attr || !image_path) {
+        printf("Invalid input parameters!\n");
+        return -1;
+    }
+
+    int req_height = 0;
+    int req_width = 0;
+    int req_channel = 0;
+
+    // Parse required dimensions based on format
+    switch (input_attr->fmt)
+    {
+    case RKNN_TENSOR_NHWC:
+        req_height = input_attr->dims[2];
+        req_width = input_attr->dims[1];
+        req_channel = input_attr->dims[0];
+        break;
+    case RKNN_TENSOR_NCHW:
+        req_height = input_attr->dims[1];
+        req_width = input_attr->dims[0];
+        req_channel = input_attr->dims[2];
+        break;
+    default:
+        printf("meet unsupported layout\n");
+        return -1;
+    }
+
+    printf("w=%d,h=%d,c=%d, fmt=%d\n", req_width, req_height, req_channel, input_attr->fmt);
+
+    // Load original image
+    int width = 0;
+    int height = 0;
+    int channel = 0;
+    
+    unsigned char *temp_image = stbi_load(image_path, &width, &height, &channel, req_channel);
+    if (!temp_image)
+    {
+        printf("load image [%s] failed!\n", image_path);
+        return -1;
+    }
+
+    if (width != req_width || height != req_height)
+    {
+        // Need to resize - create temporary buffer
+        unsigned char *temp_resized = (unsigned char *)malloc(req_width * req_height * req_channel);
+        if (!temp_resized)
+        {
+            printf("malloc for resize failed!\n");
+            STBI_FREE(temp_image);
+            return -1;
+        }
+
+        // Perform resize
+        if (stbir_resize_uint8(temp_image, width, height, 0, 
+                              temp_resized, req_width, req_height, 0, 
+                              channel) != 1)
+        {
+            printf("resize image failed!\n");
+            STBI_FREE(temp_image);
+            free(temp_resized);
+            return -1;
+        }
+
+        // Copy resized data to output buffer
+        memcpy(output_buffer, temp_resized, req_width * req_height * req_channel);
+        
+        // Clean up
+        STBI_FREE(temp_image);
+        free(temp_resized);
+    }
+    else
+    {
+        // No resize needed - copy directly to output buffer
+        memcpy(output_buffer, temp_image, req_width * req_height * req_channel);
+        STBI_FREE(temp_image);
+    }
+
+    return 0;
+}
+
 int process_input(unsigned char *src_buf, void **dst_buf, rknn_tensor_attr *in_attr,
     std::vector<float> mean, std::vector<float> scale,
     bool isReorder210, bool isNCHW)
@@ -416,3 +530,9 @@ void print_tensor(rknn_tensor_attr *attr)
            attr->dims[1], attr->dims[0], attr->n_elems, attr->size, 0, attr->type,
            attr->qnt_type, attr->fl, attr->zp, attr->scale);
 }
+
+std::chrono::high_resolution_clock::time_point now() {
+    return std::chrono::high_resolution_clock::now();
+}
+
+} // namespace utils
