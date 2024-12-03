@@ -3,6 +3,7 @@
 #include <cmath>
 #include <queue>
 #include <iostream>
+#include <fstream>
 
 Eigen::MatrixXi DKD::maxpool_detect_keypoints(const uint8_t* scores_map, int H, int W){
     // Map existing scores data the the eigen matrix
@@ -22,7 +23,26 @@ Eigen::MatrixXi DKD::maxpool_detect_keypoints(const uint8_t* scores_map, int H, 
     );   
 
 
+
+
     Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> max_mask = (scores.array() == maxpooled.array()).matrix();
+    Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> int_mask = max_mask.cast<uint8_t>();
+
+    // static int frame_count = 0;
+    // do {// Write keypoints to file
+    
+    //     std::string scrs_path = "mxpl/mxpl" + std::to_string(frame_count++) + ".hm";
+    //     std::ofstream scores_file(scrs_path, std::ios::binary | std::ios::out);
+    //     if (!scores_file) {
+    //         std::cerr << "Failed to open output file for keypoints." << std::endl;
+    //         continue;
+    //     }
+    //     scores_file.write(
+    //         reinterpret_cast<const char*>(int_mask.data()), 
+    //         sizeof(int_mask[0]) * int_mask.size()
+    //     );
+    //     scores_file.close();
+    // } while(0);
     
     auto cmp = [&scores](const Eigen::Vector2i& a, const Eigen::Vector2i& b) {
         return scores(a.y(), a.x()) > scores(b.y(), b.x());
@@ -33,7 +53,7 @@ Eigen::MatrixXi DKD::maxpool_detect_keypoints(const uint8_t* scores_map, int H, 
     // Extarct keypoints from the score map using maximum mask
     for (int i = h_start; i < h_stop; ++i) {
         for (int j = w_start; j < w_stop; ++j) {
-            if (max_mask(i, j)) {
+            if (max_mask(i, j) && scores(i, j) > 127) {
                 pq.push(Eigen::Vector2i(j, i));
                 if (pq.size() > m_top_k) {
                     pq.pop();
@@ -82,8 +102,6 @@ void DKD::run(const uint8_t* scores_map, const uint8_t* descriptor_map,
 
     // Extract keypoints' UVs
     keypoints = maxpool_detect_keypoints(scores_map, H, W);
-
-    //std::cout << keypoints << std::endl;
 
     // Sample descriptors using UVs
     descriptors = sample_descriptors(descriptor_map, keypoints, D, H, W);

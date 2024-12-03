@@ -425,6 +425,7 @@ void extract_scoremap_reordered(uint8_t* input, uint8_t* scoremap, int height, i
     }
 }
 
+// Isn't used on edge
 void perform_matching(const Eigen::MatrixXf& desc1, const Eigen::MatrixXf& desc2, std::vector<std::pair<int, int>>& matches, float threshold) {
     Eigen::MatrixXf sim = desc1 * desc2.transpose();
     sim = (sim.array() >= threshold).select(sim, Eigen::MatrixXf::Zero(sim.rows(), sim.cols()));
@@ -447,6 +448,11 @@ void perform_matching(const Eigen::MatrixXf& desc1, const Eigen::MatrixXf& desc2
     }
 }
 
+struct Frame {
+    uint32_t id;
+    Eigen::MatrixXi keypoints;
+    Eigen::MatrixXf descriptors;
+};
 
 int main(int argc, char **argv)
 {
@@ -495,19 +501,19 @@ int main(int argc, char **argv)
             uint8_t* input_data = reinterpret_cast<uint8_t*>(RK_MPI_MB_GetPtr(media_buffer));
             size_t input_size = RK_MPI_MB_GetSize(media_buffer);
 
-            {// Write image to file
-                std::string img_file = "imgs/img" + std::to_string(frame_count++) + ".rgb";
-                std::ofstream image_file(img_file, std::ios::binary | std::ios::out);
-                if (!image_file) {
-                    std::cerr << "Failed to open output file for keypoints." << std::endl;
-                    continue;
-                }
-                image_file.write(
-                    reinterpret_cast<const char*>(input_data), 
-                    sizeof(input_data[0]) * input_size
-                );
-                image_file.close();
-            }
+            // {// Write image to file
+            //     std::string img_file = "imgs/img" + std::to_string(frame_count++) + ".rgb";
+            //     std::ofstream image_file(img_file, std::ios::binary | std::ios::out);
+            //     if (!image_file) {
+            //         std::cerr << "Failed to open output file for keypoints." << std::endl;
+            //         continue;
+            //     }
+            //     image_file.write(
+            //         reinterpret_cast<const char*>(input_data), 
+            //         sizeof(input_data[0]) * input_size
+            //     );
+            //     image_file.close();
+            // }
 
             model.run_mapped(input_data);
 
@@ -523,6 +529,8 @@ int main(int argc, char **argv)
     };
     
     DKD dkd(200, 1, 4);
+    ThreadSafeQueue<Frame> frame_queue;
+
 
     auto keypoint_detector_worker = [&](){
         int frame_count = 0;
@@ -541,41 +549,57 @@ int main(int argc, char **argv)
             Eigen::MatrixXf descriptors;
             // I hope the memory layout matches the one I expect here.... please....
             dkd.run(feature_map.data() + scoremap_offset, feature_map.data(), keypoints, descriptors, D, H, W);
+            
+            // Submit frame for sending
+            Frame frame;
+            frame.id = frame_count++;
+            frame.keypoints = keypoints;
+            frame.descriptors = descriptors;
+            frame_queue.push(std::move(frame));
 
-            {// Write keypoints to file
-                std::string scrs_path = "scrs/scrs" + std::to_string(frame_count) + ".hm";
-                std::ofstream scores_file(scrs_path, std::ios::binary | std::ios::out);
-                if (!scores_file) {
-                    std::cerr << "Failed to open output file for keypoints." << std::endl;
-                    continue;
-                }
-                scores_file.write(
-                    reinterpret_cast<const char*>(feature_map.data() + scoremap_offset), 
-                    sizeof(feature_map[0]) * H * W
-                );
-                scores_file.close();
-            }
+            // {// Write keypoints to file
+            //     std::string scrs_path = "scrs/scrs" + std::to_string(frame_count) + ".hm";
+            //     std::ofstream scores_file(scrs_path, std::ios::binary | std::ios::out);
+            //     if (!scores_file) {
+            //         std::cerr << "Failed to open output file for keypoints." << std::endl;
+            //         continue;
+            //     }
+            //     scores_file.write(
+            //         reinterpret_cast<const char*>(feature_map.data() + scoremap_offset), 
+            //         sizeof(feature_map[0]) * H * W
+            //     );
+            //     scores_file.close();
+            // }
 
-            {// Write keypoints to file
-                std::string kpts_path = "kpts/kpts" + std::to_string(frame_count++) + ".bin";
-                std::ofstream keypoints_file(kpts_path, std::ios::binary | std::ios::out);
-                if (!keypoints_file) {
-                    std::cerr << "Failed to open output file for keypoints." << std::endl;
-                    continue;
-                }
-                keypoints_file.write(
-                    reinterpret_cast<const char*>(keypoints.data()), 
-                    sizeof(keypoints(0, 0)) * keypoints.cols() * keypoints.rows()
-                );
-                keypoints_file.close();
-            }
+            // {// Write keypoints to file
+            //     std::string kpts_path = "kpts/kpts" + std::to_string(frame_count++) + ".bin";
+            //     std::ofstream keypoints_file(kpts_path, std::ios::binary | std::ios::out);
+            //     if (!keypoints_file) {
+            //         std::cerr << "Failed to open output file for keypoints." << std::endl;
+            //         continue;
+            //     }
+            //     keypoints_file.write(
+            //         reinterpret_cast<const char*>(keypoints.data()), 
+            //         sizeof(keypoints(0, 0)) * keypoints.cols() * keypoints.rows()
+            //     );
+            //     keypoints_file.close();
+            // }
         }
+    };
+
+
+    // Create asio broadcaster here and start sending frames.
+
+    auto network_server_worker = [&](){
+
     };
 
     std::thread feature_extractor_thread(feature_extractor_worker);
     std::thread keypoint_detector_thread(keypoint_detector_worker);
+    std::thread network_server_thread(network_server_worker);
     feature_extractor_thread.join();
     keypoint_detector_thread.join();
+    network_server_thread.join();
 
     model.unmap_io();
     
