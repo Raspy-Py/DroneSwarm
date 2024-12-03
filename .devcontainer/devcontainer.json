@@ -5,9 +5,17 @@
         "--privileged",
         "--network=host"
     ],
-    "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
-    },
     "workspaceMount": "source=${localWorkspaceFolder},target=/root/workdir,type=bind",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash"
+            },
+            "extensions": [
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools"
+            ]
+        }
+    },
     "workspaceFolder": "/root/workdir"
 }
