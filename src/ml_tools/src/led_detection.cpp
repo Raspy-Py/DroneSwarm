@@ -18,20 +18,6 @@ std::vector<std::pair<int, int>> LedDetector::detect(const Eigen::Matrix<float, 
                                                                             r_flat.array() + b_flat.array();
     Eigen::Matrix<float, 1, Eigen::Dynamic, Eigen::RowMajor> blue_scores = -b_flat.array() +
                                                                             r_flat.array() + g_flat.array();
-    if (debug)
-    {
-        std::cout << "\nInput Matrices:" << std::endl;
-        std::cout << "\nR channel:" << std::endl
-                    << r_channel;
-        std::cout << "\nG channel:" << std::endl
-                    << g_channel;
-        std::cout << "\nB channel:" << std::endl
-                    << b_channel;
-        print_scores(red_scores, width, height, "Red");
-        print_scores(green_scores, width, height, "Green");
-        print_scores(blue_scores, width, height, "Blue");
-    }
-
     Eigen::Index red_idx, green_idx, blue_idx;
     red_scores.minCoeff(&red_idx);
     green_scores.minCoeff(&green_idx);
@@ -41,23 +27,6 @@ std::vector<std::pair<int, int>> LedDetector::detect(const Eigen::Matrix<float, 
                             greenp = {green_idx % width, green_idx / width},
                             bluep = {blue_idx % width, blue_idx / width};
     return std::vector<std::pair<int, int>>{redp, greenp, bluep};
-}
-
-
-void LedDetector::print_scores(const Eigen::Matrix<float, 1, Eigen::Dynamic, Eigen::RowMajor> &scores,
-                    int width, int height, const std::string &name)
-{
-    std::cout << "\n" << name << " scores matrix:" << std::endl;
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x)
-            std::cout << std::fixed << std::setprecision(3) << scores(y * width + x) << "\t";
-        std::cout << std::endl;
-    }
-    Eigen::Index min_idx;
-    float min_val = scores.minCoeff(&min_idx);
-    int min_x = min_idx % width;
-    int min_y = min_idx / width;
-    std::cout << "Minimum score: " << min_val << " at position (" << min_x << ", " << min_y << ")\n";
 }
 
 
@@ -101,45 +70,46 @@ void LedDetector::map_test(const void* imageData, int width, int height) {
     std::cout << "Blue LED found at: (" << results[2].first << ", " << results[2].second << ")" << std::endl;
 }
 
-double LedDetector::calculate_angle(const std::pair<int, int>& pixel_1, 
-                       const std::pair<int, int>& pixel_2, 
-                       double fx, double fy, double cx, double cy) {
-    double x1 = static_cast<double>(pixel_1.first);
-    double y1 = static_cast<double>(pixel_1.second);
-    double x2 = static_cast<double>(pixel_2.first);
-    double y2 = static_cast<double>(pixel_2.second);
+float calculateDistance(const std::vector<std::pair<int, int>>& led_coords) {
+    Eigen::Matrix<float, 3, 3> led_coords_homogeneous;
+    for (int i = 0; i < 3; ++i) {
+        led_coords_homogeneous(i, 0) = led_coords[i].first;  // x-coordinate
+        led_coords_homogeneous(i, 1) = led_coords[i].second; // y-coordinate
+        led_coords_homogeneous(i, 2) = 1.0f;                // homogeneous coordinate
+    }
+    Eigen::Matrix<float, 3, 3> rays = intrinsics.inverse() * led_coords_homogeneous.transpose();
+    auto objectiveFunction = [&](const Eigen::Vector3f& lambdas) {
+        Eigen::Vector3f p1 = lambdas(0) * rays.col(0);
+        Eigen::Vector3f p2 = lambdas(1) * rays.col(1);
+        Eigen::Vector3f p3 = lambdas(2) * rays.col(2);
 
-    double X1 = (x1 - cx) / fx;
-    double Y1 = (y1 - cy) / fy;
-    double X2 = (x2 - cx) / fx;
-    double Y2 = (y2 - cy) / fy;
+        float dist12 = (p1 - p2).norm();
+        float dist13 = (p1 - p3).norm();
+        float dist23 = (p2 - p3).norm();
+        return std::pow(dist12 - d12, 2) + std::pow(dist13 - d13, 2) + std::pow(dist23 - d23, 2);
+    };
 
-    Eigen::Vector3d v1(X1, Y1, 1.0);
-    Eigen::Vector3d v2(X2, Y2, 1.0);
+    Eigen::Vector3f lambdas = Eigen::Vector3f::Ones();
+    const float epsilon = 1e-6;
+    const int max_iterations = 1000;
+    float learning_rate = 1e-2;
+    for (int iter = 0; iter < max_iterations; ++iter) {
+        Eigen::Vector3f gradient;
+        for (int i = 0; i < 3; ++i) {
+            Eigen::Vector3f lambdas_up = lambdas, lambdas_down = lambdas;
+            lambdas_up(i) += epsilon;
+            lambdas_down(i) -= epsilon;
+            gradient(i) = (objectiveFunction(lambdas_up) - objectiveFunction(lambdas_down)) / (2 * epsilon);
+        }
+        lambdas -= learning_rate * gradient;
+        if (gradient.norm() < epsilon) break;
+    }
 
-    return v1.dot(v2) / (v1.norm() * v2.norm());
-}
+    Eigen::Vector3f p1 = lambdas(0) * rays.col(0);
+    Eigen::Vector3f p2 = lambdas(1) * rays.col(1);
+    Eigen::Vector3f p3 = lambdas(2) * rays.col(2);
 
-std::vector<double> LedDetector::calculate_delta(double x1, double x2, double x3, 
-                                    double cosa, double cosb, double cosc, 
-                                    double ncosa, double ncosb, double ncosc) {
-    double a1 = x1 - x2 * cosa;
-    double a2 = x2 - x3 * cosb;
-    double a3 = x1 - x3 * cosc;
+    Eigen::Vector3f centroid = (p1 + p2 + p3) / 3.0f;
 
-    double b1 = x2 - x1 * cosa;
-    double b2 = x3 - x2 * cosb;
-    double b3 = x3 - x1 * cosc;
-
-    double c1 = x1 * x2 * (ncosa - cosa);
-    double c2 = x2 * x3 * (ncosb - cosb);
-    double c3 = x1 * x3 * (ncosc - cosc);
-
-    double delta = a1 * a2 * b3 + b1 * b2 * a3;
-
-    double delta_x1 = (c1 * a2 * b3 + c3 * b1 * b2 - b1 * c2 * b3) / delta;
-    double delta_x2 = (a1 * b3 * c2 + c1 * b2 * a3 - a1 * b2 * c3) / delta;
-    double delta_x3 = (a1 * a2 * c3 + b1 * c2 * a3 - c1 * a2 * a3) / delta;
-
-    return {delta_x1, delta_x2, delta_x3};
+    return centroid.norm();
 }

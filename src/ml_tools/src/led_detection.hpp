@@ -6,12 +6,18 @@
 #include <iomanip>
 #include <utility>
 
+constexpr float d12 = 0.1f;  // Distance between LED 1 and 2
+constexpr float d13 = 0.15f; // Distance between LED 1 and 3
+constexpr float d23 = 0.1f;  // Distance between LED 2 and 3
+
+const Eigen::Matrix3f intrinsics = (Eigen::Matrix3f() << 
+        323.04f, 0.0f, 250.84f,
+        0.0f, 321.8f, 141.83f,
+        0.0f, 0.0f, 1.0f).finished();
+
 class LedDetector
 {
 public:
-    void print_scores(const Eigen::Matrix<float, 1, Eigen::Dynamic, Eigen::RowMajor> &scores,
-                      int width, int height, const std::string &name);
-
     std::vector<std::pair<int, int>> detect(const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &r_channel,
                                                const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &g_channel,
                                                const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &b_channel,
@@ -23,11 +29,6 @@ public:
                     mapImageToEigen(const void* imageData, int width, int height);
 
     void map_test(const void* imageData, int width, int height);
-
-    double calculate_angle(const std::pair<int, int>& pixel_1, 
-                       const std::pair<int, int>& pixel_2, 
-                       double fx, double fy, double cx, double cy);
-    std::vector<double> calculate_delta(double x1, double x2, double x3, 
-                                    double cosa, double cosb, double cosc, 
-                                    double ncosa, double ncosb, double ncosc);
 };
+
+float calculateDistance(const std::vector<std::pair<int, int>>& led_coords);

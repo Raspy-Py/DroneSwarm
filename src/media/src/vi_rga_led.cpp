@@ -38,8 +38,9 @@ RK_U32 IMAGE_HEIGHT = 288;
 int AUTO_EXPOSURE_FRAMES = 60;
 
 const float FX = 323.04, FY = 321.8, CX = 250.84, CY = 141.83, alpha = 0.7;
-float x1 = 200, x2 = 200, x3 = 200, cosa = -11, cosb = -11, cosc = -11;
+float x1 = 240, x2 = 260, x3 = 270, cosa = -11, cosb = -11, cosc = -11;
 
+const float THRESHOLD_DIST = 100;
 typedef struct {
   char *filePath;
   int frameCount;
@@ -67,22 +68,8 @@ static void *GetConvertedFrame(void *arg) {
     auto green = std::get<1>(result);
     auto blue = std::get<2>(result);
     std::vector<std::pair<int, int>> results = ld.detect(red, green, blue, false);
-    float ncosa = ld.calculate_angle(results[0], results[1], FX, FY, CX, CY);
-    float ncosb = ld.calculate_angle(results[0], results[2], FX, FY, CX, CY);
-    float ncosc = ld.calculate_angle(results[1], results[2], FX, FY, CX, CY);
-    if (cosa != -11) {
-      auto deltas = ld.calculate_delta(x1, x2, x3, cosa, cosb, cosc, ncosa, ncosb, ncosc);
-      float deltax1 = deltas[0], deltax2 = deltas[1], deltax3 = deltas[2];
-      x1 = alpha * x1 + (1 - alpha) * (x1 + deltax1);
-      x2 = alpha * x2 + (1 - alpha) * (x2 + deltax2);
-      x3 = alpha * x3 + (1 - alpha) * (x3 + deltax3);
-    }
-    printf("%.6f %.6f %.6f\n", cosa, cosb, cosc);
-    cosa = ncosa;
-    cosb = ncosb;
-    cosc = ncosc;
-    printf("%.6f %.6f %.6f\n", x1, x2, x3);
-    printf("%.6f %.6f %.6f\n", cosa, cosb, cosc);
+    float distance = calculateDistance(results);
+    printf("Distance: %f\n", distance);
     RK_MPI_MB_ReleaseBuffer(mediaBuffer);
   }
 
