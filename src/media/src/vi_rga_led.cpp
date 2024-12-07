@@ -37,8 +37,8 @@ RK_U32 IMAGE_HEIGHT = 288;
 
 int AUTO_EXPOSURE_FRAMES = 60;
 
-const float FX = 0, FY = 0, CX = 0, CY = 0, alpha = 0.7;
-float x1 = -11, x2 = -11, x3 = -11, cosa = -11, cosb, cosc;
+const float FX = 323.04, FY = 321.8, CX = 250.84, CY = 141.83, alpha = 0.7;
+float x1 = 200, x2 = 200, x3 = 200, cosa = -11, cosb = -11, cosc = -11;
 
 typedef struct {
   char *filePath;
@@ -72,15 +72,17 @@ static void *GetConvertedFrame(void *arg) {
     float ncosc = ld.calculate_angle(results[1], results[2], FX, FY, CX, CY);
     if (cosa != -11) {
       auto deltas = ld.calculate_delta(x1, x2, x3, cosa, cosb, cosc, ncosa, ncosb, ncosc);
-      float deltax1 = deltas[0], deltax2 = deltas[1], deltax3 = deltas[3];
+      float deltax1 = deltas[0], deltax2 = deltas[1], deltax3 = deltas[2];
       x1 = alpha * x1 + (1 - alpha) * (x1 + deltax1);
       x2 = alpha * x2 + (1 - alpha) * (x2 + deltax2);
       x3 = alpha * x3 + (1 - alpha) * (x3 + deltax3);
     }
+    printf("%.6f %.6f %.6f\n", cosa, cosb, cosc);
     cosa = ncosa;
     cosb = ncosb;
     cosc = ncosc;
-
+    printf("%.6f %.6f %.6f\n", x1, x2, x3);
+    printf("%.6f %.6f %.6f\n", cosa, cosb, cosc);
     RK_MPI_MB_ReleaseBuffer(mediaBuffer);
   }
 
