@@ -37,6 +37,9 @@ RK_U32 IMAGE_HEIGHT = 288;
 
 int AUTO_EXPOSURE_FRAMES = 60;
 
+const float FX = 0, FY = 0, CX = 0, CY = 0, alpha = 0.7;
+float x1 = -11, x2 = -11, x3 = -11, cosa = -11, cosb, cosc;
+
 typedef struct {
   char *filePath;
   int frameCount;
@@ -59,8 +62,24 @@ static void *GetConvertedFrame(void *arg) {
     int width = IMAGE_WIDTH;
     int height = IMAGE_HEIGHT;
     int channels = 3;
-    ld.map_test(data, width, height);
-    printf("\n\n\n\n");
+    auto result = ld.mapImageToEigen(data, width, height);
+    auto red = std::get<0>(result);
+    auto green = std::get<1>(result);
+    auto blue = std::get<2>(result);
+    std::vector<std::pair<int, int>> results = ld.detect(red, green, blue, false);
+    float ncosa = ld.calculate_angle(results[0], results[1], FX, FY, CX, CY);
+    float ncosb = ld.calculate_angle(results[0], results[2], FX, FY, CX, CY);
+    float ncosc = ld.calculate_angle(results[1], results[2], FX, FY, CX, CY);
+    if (cosa != -11) {
+      auto deltas = ld.calculate_delta(x1, x2, x3, cosa, cosb, cosc, ncosa, ncosb, ncosc);
+      float deltax1 = deltas[0], deltax2 = deltas[1], deltax3 = deltas[3];
+      x1 = alpha * x1 + (1 - alpha) * (x1 + deltax1);
+      x2 = alpha * x2 + (1 - alpha) * (x2 + deltax2);
+      x3 = alpha * x3 + (1 - alpha) * (x3 + deltax3);
+    }
+    cosa = ncosa;
+    cosb = ncosb;
+    cosc = ncosc;
 
     RK_MPI_MB_ReleaseBuffer(mediaBuffer);
   }

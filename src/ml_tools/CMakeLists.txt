@@ -78,21 +78,12 @@ add_library(detection STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/led_detection.cpp $
 
 set_target_properties(detection PROPERTIES LINKER_LANGUAGE CXX)
 
-add_executable(led_test
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/led_test.cpp
-)
-
-target_link_libraries(led_test
-    detection
-    pthread
-    dl
-)
 
 ##################################################
 # INSTALL
 ##################################################
 
 install(
-        TARGETS rknn_api_version alike_infer_test eigen_test detection led_test
+        TARGETS rknn_api_version alike_infer_test eigen_test detection
         DESTINATION ${CMAKE_INSTALL_PREFIX}
 )

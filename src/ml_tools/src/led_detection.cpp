@@ -1,6 +1,6 @@
 #include "led_detection.hpp"
 
-std::vector<std::pair<float, float>> LedDetector::detect(const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &r_channel,
+std::vector<std::pair<int, int>> LedDetector::detect(const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &r_channel,
                                             const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &g_channel,
                                             const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &b_channel,
                                             bool debug = true)
@@ -40,7 +40,7 @@ std::vector<std::pair<float, float>> LedDetector::detect(const Eigen::Matrix<flo
     std::pair<float, float> redp = {red_idx % width, red_idx / width},
                             greenp = {green_idx % width, green_idx / width},
                             bluep = {blue_idx % width, blue_idx / width};
-    return std::vector<std::pair<float, float>>{redp, greenp, bluep};
+    return std::vector<std::pair<int, int>>{redp, greenp, bluep};
 }
 
 
@@ -93,10 +93,53 @@ void LedDetector::map_test(const void* imageData, int width, int height) {
     auto green = std::get<1>(result);
     auto blue = std::get<2>(result);
     
-    std::vector<std::pair<float, float>> results = detect(red, green, blue, false);
+    std::vector<std::pair<int, int>> results = detect(red, green, blue, false);
     
     std::cout << "\nLED Detection Results:" << std::endl;
     std::cout << "Red LED found at: (" << results[0].first << ", " << results[0].second << ")" << std::endl;
     std::cout << "Green LED found at: (" << results[1].first << ", " << results[1].second << ")" << std::endl;
     std::cout << "Blue LED found at: (" << results[2].first << ", " << results[2].second << ")" << std::endl;
+}
+
+double LedDetector::calculate_angle(const std::pair<int, int>& pixel_1, 
+                       const std::pair<int, int>& pixel_2, 
+                       double fx, double fy, double cx, double cy) {
+    double x1 = static_cast<double>(pixel_1.first);
+    double y1 = static_cast<double>(pixel_1.second);
+    double x2 = static_cast<double>(pixel_2.first);
+    double y2 = static_cast<double>(pixel_2.second);
+
+    double X1 = (x1 - cx) / fx;
+    double Y1 = (y1 - cy) / fy;
+    double X2 = (x2 - cx) / fx;
+    double Y2 = (y2 - cy) / fy;
+
+    Eigen::Vector3d v1(X1, Y1, 1.0);
+    Eigen::Vector3d v2(X2, Y2, 1.0);
+
+    return v1.dot(v2) / (v1.norm() * v2.norm());
+}
+
+std::vector<double> LedDetector::calculate_delta(double x1, double x2, double x3, 
+                                    double cosa, double cosb, double cosc, 
+                                    double ncosa, double ncosb, double ncosc) {
+    double a1 = x1 - x2 * cosa;
+    double a2 = x2 - x3 * cosb;
+    double a3 = x1 - x3 * cosc;
+
+    double b1 = x2 - x1 * cosa;
+    double b2 = x3 - x2 * cosb;
+    double b3 = x3 - x1 * cosc;
+
+    double c1 = x1 * x2 * (ncosa - cosa);
+    double c2 = x2 * x3 * (ncosb - cosb);
+    double c3 = x1 * x3 * (ncosc - cosc);
+
+    double delta = a1 * a2 * b3 + b1 * b2 * a3;
+
+    double delta_x1 = (c1 * a2 * b3 + c3 * b1 * b2 - b1 * c2 * b3) / delta;
+    double delta_x2 = (a1 * b3 * c2 + c1 * b2 * a3 - a1 * b2 * c3) / delta;
+    double delta_x3 = (a1 * a2 * c3 + b1 * c2 * a3 - c1 * a2 * a3) / delta;
+
+    return {delta_x1, delta_x2, delta_x3};
 }

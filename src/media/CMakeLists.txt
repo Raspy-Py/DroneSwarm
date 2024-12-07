@@ -82,7 +82,7 @@ target_link_libraries(video_stream
 
 # 3. read_and_convert
 add_executable(read_and_convert
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_rga_bin.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/vi_rga_led.cpp
         ${COMMON_SOURCES}
 )
 target_link_libraries(read_and_convert
