@@ -1,5 +1,6 @@
 import cv2 
-import numpy as np 
+import numpy as np
+import sys
 from torchvision.transforms import ToTensor
 from LedDetection import LedDetector
 INTRINSIC_PATH = "scripts/calibration/20241206_215259/camera_matrix.txt"
@@ -47,14 +48,24 @@ def calculate_angle(pixel_1, pixel_2, intrinsics):
 
     cos_theta = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
     return cos_theta
-    # return np.clip(cos_theta, -1.0, 1.0)  # Clip to avoid numerical issues
 
-def main():
+if __name__ == '__main__':
+    try:
+        port = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_PORT
+        stream = sys.argv[2] if len(sys.argv) > 2 else DEFAULT_STREAM
+    except:
+        print("Usage: python stream.py [port] [stream]")
+        print("args:")
+        print("\tport: RTSP port number (default: 554)")
+        print("\tstream: RTSP stream name (default: main_stream)")
+        exit()
+        ld = LedDetector()
+
     ld = LedDetector()
     intrinsics = get_intrinsics()
     x1prev, x2prev, x3prev = 240, 260, 270
     cosa, cosb, cosc = None, None, None
-    rtsp_url = f'rtsp://192.168.55.1:{DEFAULT_PORT}/live/{DEFAULT_STREAM}'
+    rtsp_url = f'rtsp://192.168.55.1:{port}/live/{stream}'
     cap = cv2.VideoCapture(rtsp_url)
     if not cap.isOpened():
         print("Cannot open cam stream")
@@ -93,18 +104,7 @@ def main():
         cosb = ncosb
         cosc = ncosc
         
-#         print(f"""Angle between red, green = {rg}
-# Angle between red, blue = {rb}
-# Angle between blue, green = {bg}
-
-# """)
-        # print(x1prev, "BLUE")
-        # print(x2prev, "GREEN")
-        # print(x3prev, "RED")
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()
     cv2.destroyAllWindows()
-
-if __name__ == '__main__':
-    main()
