@@ -72,9 +72,7 @@ target_link_libraries(rknn_api_version
         ${RKAIQ_LIBRARY}
         ${RKNN_API_LIBRARY}
         pthread
-        dl
 )
-
 # 2. alike_infer_test
 add_executable(alike_infer_test
         ${CMAKE_CURRENT_SOURCE_DIR}/src/alike_infer_test.cpp
