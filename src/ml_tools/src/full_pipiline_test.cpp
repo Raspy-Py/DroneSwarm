@@ -1198,6 +1198,7 @@ int main(int argc, char **argv) {
     cfg.session_cfg[i].stViChn.enModId = RK_ID_VI;
     cfg.session_cfg[i].stViChn.s32ChnId = i;
     SAMPLE_COMMON_VI_Start(&cfg.session_cfg[i], VI_WORK_MODE_NORMAL, s32CamId);
+    
     // VENC create
     printf("VENC create\n");
     cfg.session_cfg[i].stVenChn.enModId = RK_ID_VENC;
